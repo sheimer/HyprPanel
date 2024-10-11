@@ -1,6 +1,7 @@
 import { Menu } from './menu/index';
 import { Workspaces } from './workspaces/index';
 import { ClientTitle } from './window_title/index';
+import { ClientList } from './client_list/index';
 import { Media } from './media/index';
 import { Notifications } from './notifications/index';
 import { Volume } from './volume/index';
@@ -25,6 +26,7 @@ export {
     Menu,
     Workspaces,
     ClientTitle,
+    ClientList,
     Media,
     Notifications,
     Volume,

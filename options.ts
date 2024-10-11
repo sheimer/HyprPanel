@@ -819,6 +819,9 @@ const options = mkOptions(OPTIONS, {
                 },
             },
         },
+        taskbar: {
+            location: opt<BarLocation>('bottom'),
+        },
     },
 
     bar: {
@@ -1038,6 +1041,26 @@ const options = mkOptions(OPTIONS, {
                 scrollDown: opt(''),
             },
         },
+    },
+
+    taskbar: {
+        layouts: opt({
+            '1': {
+                left: ['windowlist'],
+                middle: [],
+                right: [],
+            },
+            '2': {
+                left: [],
+                middle: [],
+                right: [],
+            },
+            '0': {
+                left: [],
+                middle: [],
+                right: [],
+            },
+        }),
     },
 
     menus: {

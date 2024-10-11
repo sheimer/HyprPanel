@@ -60,15 +60,15 @@ export async function sh(cmd: string | string[]): Promise<string> {
 }
 
 export function forMonitors(widget: (monitor: number) => Gtk.Window): Window[] {
-    // const n = Gdk.Display.get_default()?.get_n_monitors() || 1;
-    // return range(n, 0).flatMap(widget);
-    const display = Gdk.Display.get_default();
-    const screen = display.get_default_screen();
-    for (let i = 0; i < display.get_n_monitors(); ++i) {
-        if (screen.get_monitor_plug_name(i) === 'DVI-D-1') {
-            return [i].flatMap(widget);
-        }
-    }
+    const n = Gdk.Display.get_default()?.get_n_monitors() || 1;
+    return range(n, 0).flatMap(widget);
+    // const display = Gdk.Display.get_default();
+    // const screen = display.get_default_screen();
+    // for (let i = 0; i < display.get_n_monitors(); ++i) {
+    //     if (screen.get_monitor_plug_name(i) === 'DVI-D-1') {
+    //         return [i].flatMap(widget);
+    //     }
+    // }
 }
 
 /**
