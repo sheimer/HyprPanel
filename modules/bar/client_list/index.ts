@@ -158,11 +158,8 @@ const truncateTitle = (title: string, max_size: number): string => {
 };
 
 const ClientList = (): BarBoxChild => {
-    const isVis = Variable(false);
-
     const items = Utils.merge([hyprland.bind('clients')], (clients) => {
         const children: Client<Child>[] = [];
-        isVis.value = clients.length > 0;
 
         clients.forEach((client) => {
             children.push(WidgetContainer(Client(client)));
@@ -212,8 +209,6 @@ const Client = (client): BarBoxChild => {
                     truncation_size.bind('value'),
                 ],
                 (useCustomTitle, useClassName, showLabel, showIcon, truncate, truncationSize) => {
-                    console.log(client.class, client.title);
-                    console.log(showIcon, showLabel);
                     const children: Label<Child>[] = [];
                     if (showIcon) {
                         children.push(
