@@ -157,19 +157,29 @@ const truncateTitle = (title: string, max_size: number): string => {
     return title;
 };
 
-const ClientList = (): Box => {
+const ClientList = (): BarBoxChild => {
+    const isVis = Variable(false);
+
+    const items = Utils.merge([hyprland.bind('clients')], (clients) => {
+        const children: Client<Child>[] = [];
+        isVis.value = clients.length > 0;
+
+        clients.forEach((client) => {
+            children.push(WidgetContainer(Client(client)));
+        });
+
+        return children;
+    });
+
     return {
         component: Widget.Box({
-            className: 'client-list-container',
-            children: Utils.merge([hyprland.bind('clients')], (clients) => {
-                const children: Client<Child>[] = [];
-                clients.forEach((client) => {
-                    children.push(WidgetContainer(Client(client)));
-                });
-
-                return children;
-            }),
+            className: 'windowlist-container',
+            children: items,
+            css: 'background-color: transparent; padding: 0px; border: 0px none; margin: 0px;',
         }),
+        props: {
+            css: 'background-color: transparent; padding: 0px; border: 0px none; margin: 0px;',
+        },
         isVisible: true,
         boxClass: 'windowlist',
     };
@@ -203,6 +213,7 @@ const Client = (client): BarBoxChild => {
                 ],
                 (useCustomTitle, useClassName, showLabel, showIcon, truncate, truncationSize) => {
                     console.log(client.class, client.title);
+                    console.log(showIcon, showLabel);
                     const children: Label<Child>[] = [];
                     if (showIcon) {
                         children.push(

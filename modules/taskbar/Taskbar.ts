@@ -47,6 +47,7 @@ type Section =
     | 'dashboard'
     | 'workspaces'
     | 'windowtitle'
+    | 'windowlist'
     | 'media'
     | 'notifications'
     | 'volume'
@@ -98,7 +99,7 @@ const widget = {
     dashboard: (): Button<Child, Attribute> => WidgetContainer(Menu()),
     workspaces: (monitor: number): Button<Child, Attribute> => WidgetContainer(Workspaces(monitor)),
     windowtitle: (): Button<Child, Attribute> => WidgetContainer(ClientTitle()),
-    windowlist: (monitor: number): Array<Button<Child, Attribute>> => ClientList(monitor),
+    windowlist: (): Button<Child, Attribute> => WidgetContainer(ClientList()),
     media: (): Button<Child, Attribute> => WidgetContainer(Media()),
     notifications: (): Button<Child, Attribute> => WidgetContainer(Notifications()),
     volume: (): Button<Child, Attribute> => WidgetContainer(Volume()),
