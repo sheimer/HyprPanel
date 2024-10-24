@@ -3,7 +3,6 @@ import { BarItemBox as WidgetContainer } from '../../shared/barItemBox.js';
 import { BarBoxChild } from 'lib/types/bar';
 import options from 'options';
 import { Attribute, Child } from 'lib/types/widget';
-import { ActiveClient } from 'types/service/hyprland';
 import Label from 'types/widgets/label';
 import { runAsyncCommand, throttledScrollHandler } from 'customModules/utils';
 import Button from 'types/widgets/button';
@@ -11,7 +10,7 @@ import Gdk from 'types/@girs/gdk-3.0/gdk-3.0';
 
 const { leftClick, rightClick, middleClick, scrollDown, scrollUp } = options.bar.windowtitle;
 
-const filterTitle = (windowtitle: ActiveClient): Record<string, string> => {
+const filterTitle = (windowtitle): Record<string, string> => {
     const windowTitleMap = [
         // user provided values
         ...options.bar.windowtitle.title_map.value,
@@ -138,7 +137,7 @@ const filterTitle = (windowtitle: ActiveClient): Record<string, string> => {
     };
 };
 
-const getTitle = (client: ActiveClient, useCustomTitle: boolean, useClassName: boolean): string => {
+const getTitle = (client, useCustomTitle: boolean, useClassName: boolean): string => {
     if (useCustomTitle) return filterTitle(client).label;
     if (useClassName) return client.class;
 
@@ -158,22 +157,42 @@ const truncateTitle = (title: string, max_size: number): string => {
 };
 
 const ClientList = (): BarBoxChild => {
-    const items = Utils.merge([hyprland.bind('clients')], (clients) => {
-        const children: Client<Child>[] = [];
-
-        clients.forEach((client) => {
-            children.push(WidgetContainer(Client(client)));
-        });
-
-        return children;
-    });
+    const clients = Variable(hyprland.clients.map((client) => WidgetContainer(Client(client))));
 
     return {
         component: Widget.Box({
             className: 'windowlist-container',
-            children: items,
+            children: clients.bind(),
             css: 'background-color: transparent; padding: 0px; border: 0px none; margin: 0px;',
-        }),
+        })
+            .hook(
+                hyprland,
+                (self, address) => {
+                    const client = hyprland.clients.find((c) => c.address === address);
+                    if (client) {
+                        clients.value.push(WidgetContainer(Client(client)));
+                        clients.setValue(clients.value);
+                    }
+                },
+                'client-added',
+            )
+            .hook(
+                hyprland,
+                (self, address) => {
+                    if (typeof address === 'undefined') {
+                        return;
+                    }
+                    clients.value = clients.value.filter((client) => client.attribute.address !== address);
+                },
+                'client-removed',
+            )
+            .hook(
+                hyprland,
+                (self, eventName, _data) => {
+                    console.log(eventName);
+                },
+                'event',
+            ),
         props: {
             css: 'background-color: transparent; padding: 0px; border: 0px none; margin: 0px;',
         },
@@ -184,6 +203,8 @@ const ClientList = (): BarBoxChild => {
 
 const Client = (client): BarBoxChild => {
     const { custom_title, class_name, label, icon, truncation, truncation_size } = options.bar.windowtitle;
+
+    const renderClient = Variable(client);
 
     return {
         component: Widget.Box({
@@ -214,7 +235,7 @@ const Client = (client): BarBoxChild => {
                         children.push(
                             Widget.Label({
                                 class_name: 'bar-button-icon windowtitle txt-icon bar',
-                                label: filterTitle(client).icon,
+                                label: filterTitle(renderClient.value).icon,
                             }),
                         );
                     }
@@ -224,7 +245,7 @@ const Client = (client): BarBoxChild => {
                             Widget.Label({
                                 class_name: `bar-button-label windowtitle ${showIcon ? '' : 'no-icon'}`,
                                 label: truncateTitle(
-                                    getTitle(client, useCustomTitle, useClassName),
+                                    getTitle(renderClient.value, useCustomTitle, useClassName),
                                     truncate ? truncationSize : -1,
                                 ),
                             }),
@@ -238,6 +259,9 @@ const Client = (client): BarBoxChild => {
         isVisible: true,
         boxClass: 'windowtitle',
         props: {
+            attribute: {
+                ...client,
+            },
             setup: (self: Button<Child, Attribute>): void => {
                 self.hook(options.bar.scrollSpeed, () => {
                     const throttledHandler = throttledScrollHandler(options.bar.scrollSpeed.value);
@@ -257,7 +281,27 @@ const Client = (client): BarBoxChild => {
                     self.on_scroll_down = (clicked: Button<Child, Attribute>, event: Gdk.Event): void => {
                         throttledHandler(scrollDown.value, { clicked, event });
                     };
-                });
+                }).hook(
+                    hyprland,
+                    (self, eventName, _data = '') => {
+                        const [address, ...data] = _data.split(',');
+                        // console.log(address, ' <=> ', self.attribute.address);
+                        if ('0x' + address === self.attribute.address) {
+                            switch (eventName) {
+                                case 'windowtitlev2':
+                                    const client = hyprland.clients.find((client) => client.address === '0x' + address);
+
+                                    console.log('windowTitleSwitch: new title', data[0], client);
+                                    break;
+                                default:
+                                    console.log(eventName);
+                                    console.log(data);
+                                    break;
+                            }
+                        }
+                    },
+                    'event',
+                );
             },
         },
     };
